@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    <div id="todo-list-app">
+        <ol>
+            <todo-item
+            v-for="(item, index) in todoList"
+            v-bind:todo="item"
+            v-bind:title="item.text"
+            v-bind:index="index"
+            v-bind:key="item.id"
+            v-on:remove="todoList.splice(index, 1)"
+            v-on:edit="editItem"
+            ></todo-item> 
+            <todo-add 
+            v-bind:todolist="todoList"
+            v-model="newTodoText"
+            v-on:additem="addTodoItem"
+            v-on:edititem="editTodoItem"
+            ></todo-add>
+        </ol>
+    </div>
+</body>
+<script>
+    const TodoList = {
+        data() {
+            return {
+                newTodoText: '',
+                todoList: [
+                    { id: 0, text: 'Vegetables' },
+                    { id: 1, text: 'Cheese' },
+                    { id: 2, text: 'Whatever else humans are supposed to eat' }
+                ],
+                newTodoId: 4
+            }
+        },
+        methods: {
+            addTodoItem() {
+                this.todoList.push({
+                    id: this.newTodoId++,
+                    text: this.newTodoText
+                })
+                this.newTodoText = ''
+            },
+            editTodoItem() {
+                this.todoList[this.newTodoId].text = this.newTodoText
+            },
+            editItem(index) {
+                this.newTodoText = this.todoList[index].text
+                this.newTodoId = index
+            }
+        }
+    }
+
+    const app = Vue.createApp(TodoList)
+
+    app.component('todo-item', {
+        props: ['title', 'index'],
+        emits: ['edit','remove'],
+        template: `
+            <li>
+                {{ title }}
+                <button v-on:click="$emit('edit', index)">Edit</button>
+                <button v-on:click="$emit('remove')">Remove</button>      
+            </li>
+            
+        `
+    })
+
+    app.component('todo-add', {
+        props: ['todolist', 'modelValue'],
+        emits: ['additem', 'edititem', 'update:modelValue'],
+        template: `
+            <input v-bind:value="modelValue" 
+            v-on:input="$emit('update:modelValue', $event.target.value)" v-on:keyup.enter="$emit('additem')"  />
+            <button v-on:click="$emit('additem')">添加</button>
+            <button v-on:click="$emit('edititem')">编辑</button>
+        `
+    })
+
+    app.mount('#todo-list-app')
+</script>
+</html>
